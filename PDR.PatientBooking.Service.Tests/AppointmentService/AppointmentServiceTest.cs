@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using AutoFixture;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -42,7 +43,7 @@ namespace PDR.PatientBooking.Service.Tests.AppointmentService
         }
 
         [Test]
-        public void AddBooking_ValidatesRequest()
+        public void AddAppointment_ValidatesRequest()
         {
             var request = _fixture.Create<AddAppointmentRequest>();
 
@@ -52,7 +53,7 @@ namespace PDR.PatientBooking.Service.Tests.AppointmentService
         }
 
         [Test]
-        public void AddBooking_AddsBookingToContextWithGeneratedId()
+        public void AddAppointment_AddsAppointmentToContextWithGeneratedId()
         {
             var bookingId = new Guid();
 
@@ -81,6 +82,18 @@ namespace PDR.PatientBooking.Service.Tests.AppointmentService
             _sut.AddNewAppointment(request);
 
             _context.Order.Should().ContainEquivalentOf(expected, options => options.Excluding(order => order.Patient).Excluding(order => order.Doctor).Excluding(order => order.Id).Using<DateTime>(ctx => ctx.Subject.Should().BeCloseTo(ctx.Expectation, 1000)).WhenTypeIs<DateTime>());
+        }
+
+        [Test]
+        public void AddAppointment_ValidatorFails_ThrowsArgumentException()
+        {
+            var failedValidationResult = new AppointmentValidationResult(false, _fixture.Create<string>());
+
+            _validator.Setup(x => x.ValidateRequest(It.IsAny<AddAppointmentRequest>())).Returns(failedValidationResult);
+
+            var exception = Assert.Throws<ArgumentException>(() => _sut.AddNewAppointment(_fixture.Create<AddAppointmentRequest>()));
+
+            exception.Message.Should().Be(failedValidationResult.Errors.First());
         }
 
     }
