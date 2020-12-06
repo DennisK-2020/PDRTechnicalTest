@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace PDR.PatientBooking.Service.PatientServices.Validation
 {
-    public class AddPatientRequestValidator : IAddPatientRequestValidator
+    public class AddPatientRequestValidator : BaseRequestValidator, IAddPatientRequestValidator
     {
         private readonly PatientBookingContext _context;
 
@@ -20,6 +20,9 @@ namespace PDR.PatientBooking.Service.PatientServices.Validation
             var result = new PdrValidationResult(true);
 
             if (MissingRequiredFields(request, ref result))
+                return result;
+
+            if (!IsEmailValid(request.Email, result))
                 return result;
 
             if (PatientAlreadyInDb(request, ref result))

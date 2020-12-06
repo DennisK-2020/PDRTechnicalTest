@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace PDR.PatientBooking.Service.DoctorServices.Validation
 {
-    public class AddDoctorRequestValidator : IAddDoctorRequestValidator
+    public class AddDoctorRequestValidator : BaseRequestValidator, IAddDoctorRequestValidator
     {
         private readonly PatientBookingContext _context;
 
@@ -23,6 +23,9 @@ namespace PDR.PatientBooking.Service.DoctorServices.Validation
                 return result;
 
             if (DoctorAlreadyInDb(request, ref result))
+                return result;
+
+            if (!IsEmailValid(request.Email, result))
                 return result;
 
             return result;
