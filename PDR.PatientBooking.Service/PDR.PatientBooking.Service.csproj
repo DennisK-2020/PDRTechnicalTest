@@ -8,4 +8,9 @@
     <ProjectReference Include="..\PDR.PatientBooking.Data\PDR.PatientBooking.Data.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="AppointmentService\" />
+    <Folder Include="AppointmentService\Request\" />
+    <Folder Include="AppointmentService\Validation\" />
+  </ItemGroup>
 </Project>

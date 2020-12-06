@@ -1,4 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using PDR.PatientBooking.Service.AppointmentService;
+using PDR.PatientBooking.Service.AppointmentService.Validation;
 using PDR.PatientBooking.Service.ClinicServices;
 using PDR.PatientBooking.Service.ClinicServices.Validation;
 using PDR.PatientBooking.Service.DoctorServices;
@@ -12,6 +14,10 @@ namespace PDR.PatientBooking.Service.IoC
     {
         public static void RegisterPatientBookingServices(this IServiceCollection collection)
         {
+
+            collection.AddScoped<IAppointmentService, AppointmentService.AppointmentService>();
+            collection.AddScoped<IAddAppointmentValidator, AddAppointmentValidator>();
+
             collection.AddScoped<IPatientService, PatientService>();
             collection.AddScoped<IAddPatientRequestValidator, AddPatientRequestValidator>();
 
