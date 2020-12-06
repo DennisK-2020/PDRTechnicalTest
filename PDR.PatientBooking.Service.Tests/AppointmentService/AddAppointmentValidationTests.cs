@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using AutoFixture;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -34,7 +35,19 @@ namespace PDR.PatientBooking.Service.Tests.AppointmentService
         [Test]
         public void ValidateRequest_AllChecksPass_ReturnsPassedValidationResult()
         {
-            var request = GetValidRequest();
+            var patient = _fixture.Create<Patient>();
+            var doctor = _fixture.Create<Doctor>();
+
+            _context.Patient.Add(patient);
+            _context.Doctor.Add(doctor);
+
+            _context.SaveChanges();
+
+            var request = _fixture.Build<AddAppointmentRequest>()
+                .With(x => x.PatientId, patient.Id)
+                .With(x => x.DoctorId, doctor.Id)
+                .With(x => x.StartTime, DateTime.UtcNow.AddYears(1))
+                .Create();
 
             var res = _sut.ValidateRequest(request);
 
@@ -45,6 +58,7 @@ namespace PDR.PatientBooking.Service.Tests.AppointmentService
         public void ValidateRequest_WhenAppointmentExits_ReturnsFailedValidationResult()
         {
             var order = _fixture.Create<Order>();
+            order.IsCancelled = false;
             order.StartTime = DateTime.UtcNow.AddDays(1);
             order.EndTime = order.StartTime.AddHours(1);
 
@@ -69,26 +83,6 @@ namespace PDR.PatientBooking.Service.Tests.AppointmentService
 
             res.PassedValidation.Should().BeFalse();
             res.Errors.Should().Contain("Appointment slot is taken");
-        }
-
-        private AddAppointmentRequest GetValidRequest()
-        {
-
-            var patient = _fixture.Create<Patient>();
-            var doctor = _fixture.Create<Doctor>();
-
-            _context.Patient.Add(patient);
-            _context.Doctor.Add(doctor);
-
-            _context.SaveChanges();
-
-            var request = _fixture.Build<AddAppointmentRequest>()
-                .With(x => x.PatientId, patient.Id)
-                .With(x => x.DoctorId, doctor.Id)
-                .With(x => x.StartTime, DateTime.UtcNow.AddYears(1))
-                .Create();
-
-            return request;
         }
 
         [TearDown]

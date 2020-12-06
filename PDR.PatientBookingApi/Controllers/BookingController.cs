@@ -13,43 +13,37 @@ namespace PDR.PatientBookingApi.Controllers
     [ApiController]
     public class BookingController : ControllerBase
     {
-        private readonly PatientBookingContext _context;
         private readonly IAppointmentService _appointmentService;
 
-        public BookingController(PatientBookingContext context, IAppointmentService appointmentService)
+        public BookingController(IAppointmentService appointmentService)
         {
-            _context = context;
             _appointmentService = appointmentService;
         }
 
         [HttpGet("patient/{identificationNumber}/next")]
         public IActionResult GetPatientNextAppointnemtn(long identificationNumber)
         {
-            var bockings = _context.Order.OrderBy(x => x.StartTime).ToList();
+            var result = _appointmentService.GetPatientNextAppointment(identificationNumber);
 
-            if (bockings.Where(x => x.Patient.Id == identificationNumber).Count() == 0)
-            {
+            if (result == null)
                 return StatusCode(502);
-            }
-            else
+
+            return Ok(new MyOrderResult { Id = result.Id, DoctorId = result.DoctorId, StartTime = result.StartTime, EndTime = result.EndTime, PatientId = result.PatientId, SurgeryType = result.SurgeryType });
+        }
+
+        [HttpPut("patient/{identificationNumber}/cancel/{bookingId}")]
+        public IActionResult CancelBooking(long identificationNumber, Guid bookingId)
+        {
+            try
             {
-                var bookings2 = bockings.Where(x => x.PatientId == identificationNumber);
-                if (bookings2.Where(x => x.StartTime > DateTime.Now).Count() == 0)
-                {
-                    return StatusCode(502);
-                }
-                else
-                {
-                    var bookings3 = bookings2.Where(x => x.StartTime > DateTime.Now);
-                    return Ok(new
-                    {
-                        bookings3.First().Id,
-                        bookings3.First().DoctorId,
-                        bookings3.First().StartTime,
-                        bookings3.First().EndTime
-                    });
-                }
+                _appointmentService.CancelAppointment(identificationNumber, bookingId);
             }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+
+            return Ok("Appointment cancelled");
         }
 
         [HttpPost()]

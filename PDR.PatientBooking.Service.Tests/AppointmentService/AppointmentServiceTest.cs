@@ -96,5 +96,72 @@ namespace PDR.PatientBooking.Service.Tests.AppointmentService
             exception.Message.Should().Be(failedValidationResult.Errors.First());
         }
 
+        [Test]
+        public void CancelAppointment_SetsOrderToCancelled()
+        {
+            var order = _fixture.Create<Order>();
+            order.IsCancelled = false;
+
+            _context.Order.Add(order);
+            _context.SaveChanges();
+
+            _sut.CancelAppointment(order.PatientId, order.Id);
+
+            _context.Order.First().IsCancelled.Should().BeTrue();
+        }
+
+        [Test]
+        public void CancelBooking_WhenBookingDoesNotExist_ThrowsArgumentException()
+        {
+            var order = _fixture.Create<Order>();
+            order.IsCancelled = false;
+
+            _context.Order.Add(order);
+            _context.SaveChanges();
+
+            Action action = () => _sut.CancelAppointment(order.PatientId, new Guid());
+
+            action.Should().Throw<ArgumentException>().WithMessage("Appointment does not exist or already cancelled");
+        }
+
+
+        [Test]
+        public void GetNextBooking_ReturnsFutureNonCancelledBookingForPatient()
+        {
+            var order = _fixture.Create<Order>();
+            order.StartTime = DateTime.UtcNow.AddDays(1);
+            _context.Order.Add(order);
+
+            order = _fixture.Create<Order>();
+            order.StartTime = DateTime.UtcNow.AddDays(2);
+            order.IsCancelled = false;
+            _context.Order.Add(order);
+
+            order = _fixture.Create<Order>();
+            order.StartTime = DateTime.UtcNow.AddDays(3);
+            order.IsCancelled = false;
+            _context.Order.Add(order);
+
+            var expectedBookingId = order.Id;
+
+            _context.SaveChanges();
+
+            var nextAppointment = _sut.GetPatientNextAppointment(order.PatientId);
+
+            Assert.AreEqual(expectedBookingId, nextAppointment.Id);
+        }
+
+        [Test]
+        public void GetNextBooking_ReturnsNullWhenNoFutureBookingFound()
+        {
+            Assert.IsNull(_sut.GetPatientNextAppointment(1));
+        }
+
+
+        [TearDown]
+        public void TearDown()
+        {
+            _context.Database.EnsureDeleted();
+        }
     }
 }

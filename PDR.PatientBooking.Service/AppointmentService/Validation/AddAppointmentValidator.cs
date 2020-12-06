@@ -21,13 +21,13 @@ namespace PDR.PatientBooking.Service.AppointmentService.Validation
             if (!IsAppointmentTimeValid(request, result))
                 return result;
 
-            if (!IsBookingSlotAvailable(request, result))
+            if (!IsAppointmentSlotAvailable(request, result))
                 return result;
 
             return result;
         }
 
-        private bool IsBookingSlotAvailable(AddAppointmentRequest newAppointment, AppointmentValidationResult result)
+        private bool IsAppointmentSlotAvailable(AddAppointmentRequest newAppointment, AppointmentValidationResult result)
         {
             result.AppointmentPatient = _context.Patient.FirstOrDefault(x => x.Id == newAppointment.PatientId);
 
@@ -49,7 +49,7 @@ namespace PDR.PatientBooking.Service.AppointmentService.Validation
                 return false;
             }
 
-            if (result.AppointmentDoctor.Orders.Any(a => a.StartTime <= newAppointment.EndTime && a.EndTime >= newAppointment.StartTime))
+            if (result.AppointmentDoctor.Orders.Any(a => a.StartTime <= newAppointment.EndTime && a.EndTime >= newAppointment.StartTime && !a.IsCancelled))
             {
                 result.PassedValidation = false;
                 result.Errors.Add("Appointment slot is taken");

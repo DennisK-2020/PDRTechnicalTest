@@ -45,5 +45,25 @@ namespace PDR.PatientBooking.Service.AppointmentService
 
             return myBooking.Id;
         }
+
+        public void CancelAppointment(long parientId, Guid bookingId)
+        {
+            var result = _context.Order.FirstOrDefault(a => a.PatientId == parientId && a.Id.Equals(bookingId) && !a.IsCancelled);
+
+            if (result == null)
+                throw new ArgumentException("Appointment does not exist or already cancelled");
+
+            result.IsCancelled = true;
+
+            _context.Order.Update(result);
+            _context.SaveChanges();
+        }
+
+        public Order GetPatientNextAppointment(long patientId)
+        {
+            var appointment = _context.Order.Where(a => a.PatientId == patientId && a.StartTime > DateTime.UtcNow && !a.IsCancelled).OrderBy(a => a.StartTime).FirstOrDefault();
+
+            return appointment;
+        }
     }
 }
