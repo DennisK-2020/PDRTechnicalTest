@@ -107,7 +107,7 @@ namespace PDR.PatientBooking.Service.Tests.DoctorServices
             _doctorService.AddDoctor(request);
 
             //assert
-            _context.Doctor.Should().ContainEquivalentOf(expected, options => options.Excluding(doctor => doctor.Id));
+            _context.Doctor.Should().ContainEquivalentOf(expected, options => options.Excluding(doctor => doctor.Id).Using<DateTime>(ctx => ctx.Subject.Should().BeCloseTo(ctx.Expectation, 1000)).WhenTypeIs<DateTime>()); // DateTime ideally should be wrapped in an abstraction where it can be easily substituted   
         }
 
         [Test]
